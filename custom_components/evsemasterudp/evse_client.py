@@ -84,6 +84,7 @@ class EVSEClient:
             'name': evse.config.name or 'EVSEMaster',
             'configured_max_electricity': evse.config.max_electricity,
             'temperature_unit': evse.config.temperature_unit,
+            'screen_brightness': evse.config.screen_brightness,  
         }
         
     # Electrical state
@@ -222,6 +223,15 @@ class EVSEClient:
         
         return await evse.set_max_electricity(amps)
     
+    async def set_brightness(self, serial: str, brightness: int) -> bool:
+        """Set the screen brightness (0-100)"""
+        evse = self.communicator.get_evse(serial)
+        if not evse:
+            _LOGGER.error(f"EVSE {serial} not found")
+            return False
+        
+        return await evse.set_brightness(brightness)
+    
     async def set_name(self, serial: str, name: str) -> bool:
         """Set the EVSE name"""
         evse = self.communicator.get_evse(serial)
@@ -284,7 +294,7 @@ class EVSEClient:
     def _record_charge_state_change(self, serial: str) -> None:
         """Record a charge stop (to protect the next start)"""
         self._last_charge_change[serial] = datetime.now()
-    _LOGGER.debug(f"Charge stop recorded for {serial}")
+        _LOGGER.debug(f"Charge stop recorded for {serial}")
 
     # --- Utility exposure for UI / sensors ---
     def get_cooldown_remaining(self, serial: str) -> timedelta:
